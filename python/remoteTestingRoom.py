@@ -11,7 +11,7 @@ from datetime import datetime
 from vision import runPipeline, PURPLE_YCRCB_LOWER, PURPLE_YCRCB_UPPER, GREEN_HSV_LOWER, GREEN_HSV_UPPER, GREEN_YCRCB_LOWER, GREEN_YCRCB_UPPER
 
 # Create output directory
-OUTPUT_DIR = "/Users/tanayvinaykya/Desktop/robotics/vision/test_frames"
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_frames")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def save_debug_frames(frame, frame_id):

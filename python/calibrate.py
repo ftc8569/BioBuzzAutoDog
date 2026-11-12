@@ -48,10 +48,17 @@ print(f"fy = {fy:.4f}")
 print(f"cx = {cx:.4f}")
 print(f"cy = {cy:.4f}")
 print(f"dist = {dist.ravel()[:5]}")
-print(json.dumps({
+calib = {
     "K": [fx, fy, cx, cy],
     "DIST_COEFFS": [float(x) for x in dist.ravel()[:5]],
-    "IMAGE_WIDTH_PX": w, "IMAGE_HEIGHT_PX": h
-}, indent=2))
+    "IMAGE_WIDTH_PX": w, "IMAGE_HEIGHT_PX": h,
+    "RMS_PX": float(rms),
+}
+print(json.dumps(calib, indent=2))
+
+# autodog loads this with CameraIntrinsics.from_calibration("camera_calib.json")
+with open("camera_calib.json", "w") as fh:
+    json.dump(calib, fh, indent=2)
+print("wrote camera_calib.json")
 
 # %%

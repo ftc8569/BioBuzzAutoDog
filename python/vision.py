@@ -958,7 +958,8 @@ def purple_tuner():
 
 
 # Run purple tuner:
-purple_tuner()
+if __name__ == "__main__":
+    purple_tuner()
 
 # %%
 # RAMP-BASED BALL DETECTION

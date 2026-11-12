@@ -1,0 +1,13 @@
+# Lint settings for the autodog package, its tests and runner.
+# The original vision scripts (vision*.py, ballDetect.py, ...) are excluded:
+# they predate this config and are kept as written.
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+include = ["autodog/**/*.py", "tests/**/*.py", "autodog_run.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
