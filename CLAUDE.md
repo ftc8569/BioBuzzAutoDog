@@ -4,9 +4,10 @@ Guidance for Claude Code when working in this repository.
 
 ## Project
 
-BioBuzzAutoDog (`ftc8569/BioBuzzAutoDog`): FTC DECODE (2025-2026) vision work.
-Detect green and purple balls, track them in field coordinates, and drive the
-robot to chase them. `docs/ftc-auto-dog.pdf` is the design;
+BioBuzzAutoDog (`ftc8569/BioBuzzAutoDog`): FTC vision work, started in DECODE
+(2025-2026, green and purple balls) and now defaulting to BIOBUZZ (2026-2027,
+yellow POLLEN, red and blue NECTAR, Limelight 3A). Detect balls, track them in
+field coordinates, and drive the robot to chase them. `docs/ftc-auto-dog.pdf` is the design;
 `python/autodog/` implements it. README.md maps every file and lists where the
 implementation intentionally departs from the doc (and why).
 

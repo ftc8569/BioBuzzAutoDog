@@ -1,6 +1,6 @@
 # BioBuzzAutoDog
 
-Vision work for FTC DECODE (2025-2026): finding the green and purple balls with a camera, tracking them in field coordinates, and driving the robot to chase them like a dog.
+FTC vision work: finding game balls with a camera, tracking them in field coordinates, and driving the robot to chase them like a dog. It started in DECODE (2025-2026) with green and purple balls. The default is now BIOBUZZ (2026-2027): yellow POLLEN and red and blue NECTAR, seen through the robot's Limelight 3A.
 
 <img src="https://github.com/user-attachments/assets/fefaeac9-8e91-4be8-9d23-9d82a193d1e3" alt="Ball detection screen recording" width="800">
 
@@ -14,7 +14,7 @@ Vision work for FTC DECODE (2025-2026): finding the green and purple balls with 
 
 ### `python/autodog/` — the auto dog tracker
 
-An implementation of the design doc, meant to run on the Pi next to the camera:
+An implementation of the design doc. It runs off the robot controller: on a Pi next to the camera, or on a laptop reading the Limelight stream (see [BIOBUZZ](#biobuzz-2026-2027-and-the-limelight)):
 
 | Module | Design doc | What it does |
 | --- | --- | --- |
@@ -89,6 +89,7 @@ This season's robot code is [ftc8569/2026-BioBuzz](https://github.com/ftc8569/20
 - `--game biobuzz` is the default. It detects yellow POLLEN (2.8 in) and red and blue NECTAR (3.6 in), reported as colors `Y`, `R` and `B`. Each color is projected at its own center height (`TrackerConfig.biobuzz()`, `ball_radii`). `--game decode` keeps the green/purple pipeline.
 - `autodog/detect.py` is an HSV blob detector with a roundness check, so alliance tape doesn't count as a ball. Its thresholds are untuned starting points.
 - `autodog/stream.py` keeps only the newest frame of a network stream, so a slow loop doesn't fall behind.
+- `autodog/calib.py` calibrates intrinsics from any source: `python -m autodog.calib capture --source limelight`, then `python -m autodog.calib solve`, which writes `limelight_calib.json` for `--calib`. Until then the Limelight uses nominal intrinsics (640x480, 54.5 x 42 degrees).
 - `--log DIR` writes `ticks.jsonl` (detections, tracks and targets per frame) plus sampled raw frames, for offline review.
 - `--no-field-gate` keeps detections outside the 12 ft field, for testing on a floor where the odometry origin isn't a field corner.
 - UDP ports moved from 5800/5801 to 47800 (tracker) and 47801 (RC), because the Control Hub forwards 5800 to 5809 to the Limelight.
@@ -108,7 +109,7 @@ python autodog_run.py sim                  # auto dog in simulation
 ```
 cd python
 pip install -r requirements-dev.txt
-python -m pytest            # 89 tests, about 10 s, no camera needed
+python -m pytest            # 92 tests, about 10 s, no camera needed
 ruff check .                # lint for autodog/, tests/, autodog_run.py
 ```
 
@@ -120,7 +121,7 @@ On the robot side, `AutoDogTest.kt` runs with the team repo's normal `gradlew te
 
 The simulator and tests assume the camera model is right. Before trusting the tracker on a field:
 
-1. Calibrate intrinsics for the actual camera and resolution (`capture_calib.py`, then `calibrate.py`).
+1. Calibrate intrinsics for the actual camera and resolution: `python -m autodog.calib capture` then `solve` for the Limelight or any stream (`capture_calib.py` and `calibrate.py` only handle the original webcam on camera 0).
 2. Measure the mount, then refine it with `autodog_run.py mount`, using balls on tile corners.
-3. Measure `pixel_sigma` from detections of a still ball, and set the ramp polygons and robot footprint in a config JSON.
+3. Measure `pixel_sigma` from detections of a still ball, and set the ramp polygons and robot footprint in a config JSON. For BIOBUZZ, also tune the HSV ranges in `autodog/detect.py` under the real lights.
 4. Measure `--capture-latency`: the time from shutter to `cap.read()` returning.
