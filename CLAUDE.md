@@ -6,8 +6,10 @@ Guidance for Claude Code when working in this repository.
 
 BioBuzzAutoDog (`ftc8569/BioBuzzAutoDog`): FTC vision work, started in DECODE
 (2025-2026, green and purple balls) and now defaulting to BIOBUZZ (2026-2027,
-yellow POLLEN, red and blue NECTAR, Limelight 3A). Detect balls, track them in
-field coordinates, and drive the robot to chase them. `docs/ftc-auto-dog.pdf` is the design;
+yellow POLLEN, red and blue NECTAR). Detect balls, track them in
+field coordinates, and drive the robot to chase them. On the BIOBUZZ robot it
+all runs on the Control Hub with a global shutter webcam, as a Kotlin port in
+`ftc8569/2026-BioBuzz`; the Python here is the reference and the simulator. `docs/ftc-auto-dog.pdf` is the design;
 `python/autodog/` implements it. README.md maps every file and lists where the
 implementation intentionally departs from the doc (and why).
 
@@ -65,7 +67,15 @@ copy them into that repo to build.
 ### BIOBUZZ robot (current season)
 
 - Robot code: `ftc8569/2026-BioBuzz`, cloned at `~/Desktop/RoboKnights/2026-BioBuzz`,
-  local branch `autodog-limelight` (not pushed). Its copies of `AutoDogLink.kt` and
+  branch `autodog-limelight` (pushed, not merged; this repo's branch is `biobuzz-limelight`).
+- The auto dog must run entirely on the robot (user requirement): global shutter
+  webcam `globalShutter` on the Control Hub, "Auto Dog Chase" TeleOp. The tracker
+  and detector are Kotlin ports of `python/autodog/` (`BallTracker.kt`,
+  `BallVision.kt`, ...). `tests/test_golden.py` fails when Python tracker behavior
+  changes: regenerate `tests/data/tracker_golden.txt`
+  (`python -m autodog.golden tests/data/tracker_golden.txt`), copy it to
+  `TeamCode/src/test/resources/autodog/` there, and port the change until
+  `BallTrackerGoldenTest` passes. The laptop + Limelight path is debugging only. Its copies of `AutoDogLink.kt` and
   `ChaseController.kt` live in `TeamCode/.../teamcode/autodog/`; keep them in step
   with `robot/` here and with `link.py`.
 - That repo's `AGENTS.md` forbids installing, deploying or running OpModes on the

@@ -1,6 +1,8 @@
 # BioBuzzAutoDog
 
-FTC vision work: finding game balls with a camera, tracking them in field coordinates, and driving the robot to chase them like a dog. It started in DECODE (2025-2026) with green and purple balls. The default is now BIOBUZZ (2026-2027): yellow POLLEN and red and blue NECTAR, seen through the robot's Limelight 3A.
+FTC vision work: finding game balls with a camera, tracking them in field coordinates, and driving the robot to chase them like a dog. It started in DECODE (2025-2026) with green and purple balls. The default is now BIOBUZZ (2026-2027): yellow POLLEN and red and blue NECTAR.
+
+On the BIOBUZZ robot the auto dog runs entirely on the Control Hub, with a wide global shutter webcam: the tracker here is ported to Kotlin in [ftc8569/2026-BioBuzz](https://github.com/ftc8569/2026-BioBuzz) (`TeamCode/.../autodog/`, see its `docs/autodog.md`). This repo is the reference implementation, the simulator, and the source of the recorded run the Kotlin port is tested against.
 
 <img src="https://github.com/user-attachments/assets/fefaeac9-8e91-4be8-9d23-9d82a193d1e3" alt="Ball detection screen recording" width="800">
 
@@ -14,7 +16,7 @@ FTC vision work: finding game balls with a camera, tracking them in field coordi
 
 ### `python/autodog/` — the auto dog tracker
 
-An implementation of the design doc. It runs off the robot controller: on a Pi next to the camera, or on a laptop reading the Limelight stream (see [BIOBUZZ](#biobuzz-2026-2027-and-the-limelight)):
+An implementation of the design doc, and the reference for the Kotlin port that runs on the robot. It can also drive a robot itself from off the robot controller: on a Pi next to the camera, or on a laptop reading the Limelight stream (see [BIOBUZZ](#biobuzz-2026-2027)):
 
 | Module | Design doc | What it does |
 | --- | --- | --- |
@@ -27,6 +29,7 @@ An implementation of the design doc. It runs off the robot controller: on a Pi n
 | `link.py` | 2.8 | UDP wire format and Pi side of the link (poses in, targets out) |
 | `extrinsics.py` | 2.10 | Fit the camera mount from balls at known field positions |
 | `sim.py`, `render.py` | — | Simulated field/robot/camera, and a top-down debug view |
+| `golden.py` | — | Records a simulated chase as `tests/data/tracker_golden.txt`, which the Kotlin port replays |
 
 `python/autodog_run.py` drives it:
 
@@ -82,9 +85,13 @@ Auto dog, robot-controller side:
 
 The team's odometry uses a center-origin field frame; `FieldFrame` converts to the tracker's corner origin.
 
-### BIOBUZZ (2026-2027) and the Limelight
+### BIOBUZZ (2026-2027)
 
-This season's robot code is [ftc8569/2026-BioBuzz](https://github.com/ftc8569/2026-BioBuzz). The local branch `autodog-limelight` there adds the "Auto Dog Chase" TeleOp and `docs/autodog.md`. The robot has a Limelight 3A and no Pi, so `autodog_run.py` runs on a laptop on the robot's Wi-Fi and reads the Limelight stream (`--source limelight`, which is `http://192.168.43.1:5800`).
+This season's robot code is [ftc8569/2026-BioBuzz](https://github.com/ftc8569/2026-BioBuzz); the auto dog is on its `autodog-limelight` branch.
+
+**On the robot (the real setup).** The "Auto Dog Chase" TeleOp runs everything on the Control Hub: a global shutter webcam named `globalShutter`, a Kotlin port of `detect.py` as a VisionPortal processor, and a Kotlin port of the tracker fed by Pinpoint odometry. Its `BallTrackerGoldenTest` replays `tests/data/tracker_golden.txt` and must get the same tracks and targets as the Python tracker on every frame. When tracker behavior changes here, `tests/test_golden.py` fails: regenerate the file with `python -m autodog.golden tests/data/tracker_golden.txt`, copy it to `TeamCode/src/test/resources/autodog/` there, and port the change. The camera intrinsics it uses are `DEFAULT_INTRINSICS` in `config.py` (`camera_calib.json`).
+
+**On a laptop (debugging).** "Auto Dog Chase (laptop tracker)" keeps the earlier setup: `autodog_run.py` runs on a laptop on the robot's Wi-Fi and reads the Limelight stream (`--source limelight`, which is `http://192.168.43.1:5800`). Laptops are not allowed on the field at events. The notes below are about this Python side.
 
 - `--game biobuzz` is the default. It detects yellow POLLEN (2.8 in) and red and blue NECTAR (3.6 in), reported as colors `Y`, `R` and `B`. Each color is projected at its own center height (`TrackerConfig.biobuzz()`, `ball_radii`). `--game decode` keeps the green/purple pipeline.
 - `autodog/detect.py` is an HSV blob detector with a roundness check, so alliance tape doesn't count as a ball. Its thresholds are untuned starting points.
@@ -109,7 +116,7 @@ python autodog_run.py sim                  # auto dog in simulation
 ```
 cd python
 pip install -r requirements-dev.txt
-python -m pytest            # 92 tests, about 10 s, no camera needed
+python -m pytest            # 94 tests, about 10 s, no camera needed
 ruff check .                # lint for autodog/, tests/, autodog_run.py
 ```
 
@@ -119,7 +126,7 @@ On the robot side, `AutoDogTest.kt` runs with the team repo's normal `gradlew te
 
 ## Hardware-to-do
 
-The simulator and tests assume the camera model is right. Before trusting the tracker on a field:
+The simulator and tests assume the camera model is right. For the on-robot tracker, the list is in `docs/autodog.md` in 2026-BioBuzz. For the Python tracker, before trusting it on a field:
 
 1. Calibrate intrinsics for the actual camera and resolution: `python -m autodog.calib capture` then `solve` for the Limelight or any stream (`capture_calib.py` and `calibrate.py` only handle the original webcam on camera 0).
 2. Measure the mount, then refine it with `autodog_run.py mount`, using balls on tile corners.
